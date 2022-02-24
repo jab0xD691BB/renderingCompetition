@@ -1,0 +1,196 @@
+// GD-Praktikum:   teil_1.cpp  (Teil 1: Start-Programm)
+// Hergenroether / Groch    Last Update: 05.07.2014
+
+#include <iostream> 
+#include <GL/freeglut.h>         //lädt alles für OpenGL
+//#include <../freeglut/include/GL/freeglut.h>
+
+using namespace std;
+
+float deltaAngle = 0.0f;
+int xOrigin = -1;
+
+float angle = 0.0;
+float lx = 0.0f, lz = .0f;
+float x = 10.0f, y, z = 10.0f;
+
+float camX = 10.0f, camY= 10.f ,camZ = 10.0f;
+float camAngle = 0.0f;
+
+void zeichneKoordinatenSys();
+
+bool leftMov = false, rightMov = false;
+bool rightClick = false;
+
+float mouseXPos = 0.f;
+
+float originX = 0;
+
+void mousecallback(int button, int state, int x, int y) {
+
+
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			rightClick = true;
+			originX = x;
+		}
+		else {
+			rightClick = false;
+		}
+
+	}
+
+	if (button == 3) {
+		camX = camX * -(.9f);
+		camY = camY * -(.9f);
+		camZ = camZ * -(.9f);
+	}
+
+	if (button == 4) {
+
+		camX = camX * 1.1f;
+		camY = camY * 1.1f;
+		camZ = camZ * 1.1f;
+	}
+
+	mouseXPos = x;
+}
+
+void mouseMove(int x, int y) {
+
+	// this will only be true when the left button is down
+
+	if (rightClick) {
+		if (originX > x) {
+			camAngle -= .01f;
+			
+		}
+		if (originX < x) {
+			camAngle += .01f;
+		}
+
+		
+
+		camX = sin(camAngle) * 10.f;
+
+		camZ = -cos(camAngle) * 10.f;
+
+
+		cout << camX << endl;
+
+	}
+
+
+
+}
+
+void Init()
+{
+	// Hier finden jene Aktionen statt, die zum Programmstart einmalig 
+	// durchgeführt werden müssen
+	glEnable(GL_DEPTH_TEST);
+	glClearDepth(1.0);
+
+	glutMouseFunc(mousecallback);
+	glutMotionFunc(mouseMove);
+
+}
+
+
+
+void RenderScene() //Zeichenfunktion
+{
+	// Hier befindet sich der Code der in jedem Frame ausgefuehrt werden muss
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();   // Aktuelle Model-/View-Transformations-Matrix zuruecksetzen
+	gluLookAt(camX, camY, camZ,
+		0., 0.0, 0.,
+		0.0f, 1.0f, 0.0f);
+
+	glColor4f(1.0, 1.0, 1.0, 1.0);
+	glutWireSphere(2.0, 30, 36);
+
+	zeichneKoordinatenSys();
+
+	//glEnd();
+	glutSwapBuffers();
+}
+
+void Reshape(int width, int height)
+{
+	// Hier finden die Reaktionen auf eine Veränderung der Größe des 
+	// Graphikfensters statt
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glViewport(0, 0, width, height);
+	//glOrtho(-1., 1., -1., 1., 0.0, 2.); // von 0.3 auf 0.0 geändert, mann sieht jetzt die fläche weil sie davor zu klein war um sie zu sehen // glOrtho(-x, bis x, -y, bis y, nearPlane, farPlane)
+	gluPerspective(45., 1., 0.1, 100.);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void Animate(int value)
+{
+	// Hier werden Berechnungen durchgeführt, die zu einer Animation der Szene  
+	// erforderlich sind. Dieser Prozess läuft im Hintergrund und wird alle 
+	// 1000 msec aufgerufen. Der Parameter "value" wird einfach nur um eins 
+	// inkrementiert und dem Callback wieder uebergeben. 
+	//std::cout << "value=" << value << std::endl;
+	// RenderScene aufrufen
+
+
+
+
+
+	glutPostRedisplay();
+	// Timer wieder registrieren - Animate wird so nach 10 msec mit value+=1 aufgerufen.
+	int wait_msec = 10;
+	glutTimerFunc(wait_msec, Animate, ++value);
+}
+
+int main(int argc, char **argv)
+{
+	glutInit(&argc, argv);                // GLUT initialisieren
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutInitWindowSize(800, 600);         // Fenster-Konfiguration
+	glutCreateWindow("Name_1; Name_2");   // Fenster-Erzeugung
+	glutDisplayFunc(RenderScene);         // Zeichenfunktion bekannt machen
+	glutReshapeFunc(Reshape);
+	// TimerCallback registrieren; wird nach 10 msec aufgerufen mit Parameter 0  
+	glutTimerFunc(10, Animate, 0);
+	Init();
+	glutMainLoop();
+	return 0;
+}
+
+void zeichneKoordinatenSys() {
+
+	glPushMatrix();
+	glLineWidth(1.0);
+	glBegin(GL_LINES);
+	//x red
+	glColor4f(1.0f, .0f, .0f, 1.0f);
+	glVertex3f(-20.0f, 0.0f, 0.0f);
+	glVertex3f(20.0f, 0.0f, 0.0f);
+	glPopMatrix();
+
+	glPushMatrix();
+	//y green
+	glColor4f(0.f, 1.0f, .0f, 1.0f);
+	glVertex3f(0.0f, -20.0f, 0.0f);
+	glVertex3f(0.0f, 20.0f, 0.0f);
+	glPopMatrix();
+
+	glPushMatrix();
+	//z blue
+	glColor4f(.0f, .0f, 1.0f, 1.0f);
+	glVertex3f(0.0f, 0.0f, -20.0f);
+	glVertex3f(0.0f, 0.0f, 20.0f);
+	glPopMatrix();
+
+	glEnd();
+
+
+
+
+
+}
